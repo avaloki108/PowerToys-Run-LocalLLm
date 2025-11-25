@@ -10,12 +10,10 @@ using Microsoft.PowerToys.Settings.UI.Library;
 using Clipboard = System.Windows.Clipboard;
 using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Serialization;
-using HtmlAgilityPack;
 
 namespace Community.PowerToys.Run.Plugin.LocalLLM
 {
-    public class Main : IPlugin, IDelayedExecutionPlugin, ISettingProvider, IContextMenu
+    public class Main : IPlugin, IDelayedExecutionPlugin, ISettingProvider, IContextMenu, IDisposable
     { 
         public static string PluginID => "550A34D0CFA845449989D581149B3D9C";
         public string Name => "LocalLLM";
@@ -23,6 +21,7 @@ namespace Community.PowerToys.Run.Plugin.LocalLLM
         private static readonly HttpClient client = new HttpClient();
         private string IconPath { get; set; }
         private PluginInitContext Context { get; set; }
+        private bool Disposed { get; set; }
 
         private string Endpoint, Model;
         public IEnumerable<PluginAdditionalOption> AdditionalOptions => new List<PluginAdditionalOption>()
@@ -133,7 +132,7 @@ namespace Community.PowerToys.Run.Plugin.LocalLLM
                 var responseStream = await response.Content.ReadAsStreamAsync();
                 using (var streamReader = new System.IO.StreamReader(responseStream))
                 {
-                    string? line;
+                    string line;
                     string finalResponse = "";
 
                     while ((line = await streamReader.ReadLineAsync()) != null)
@@ -155,10 +154,12 @@ namespace Community.PowerToys.Run.Plugin.LocalLLM
             List<Result> results = [];
             return results;
         }
+
         public Control CreateSettingPanel()
         {
             throw new NotImplementedException();
         }
+
         public List<ContextMenuResult> LoadContextMenus(Result selectedResult)
         {
             List<ContextMenuResult> results = [];
@@ -217,6 +218,31 @@ namespace Community.PowerToys.Run.Plugin.LocalLLM
             }
         }
 
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Wrapper method for <see cref="Dispose()"/> that dispose additional objects and events from the plugin itself.
+        /// </summary>
+        /// <param name="disposing">Indicate that the plugin is disposed.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (Disposed || !disposing)
+            {
+                return;
+            }
+
+            if (Context?.API != null)
+            {
+                Context.API.ThemeChanged -= OnThemeChanged;
+            }
+
+            Disposed = true;
+        }
 
     }
 
