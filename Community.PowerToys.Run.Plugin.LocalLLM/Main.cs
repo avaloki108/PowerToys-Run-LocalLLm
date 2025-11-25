@@ -226,7 +226,7 @@ namespace Community.PowerToys.Run.Plugin.LocalLLM
         }
 
         /// <summary>
-        /// Wrapper method for <see cref="Dispose()"/> that dispose additional objects and events from the plugin itself.
+        /// Wrapper method for <see cref="Dispose()"/> that disposes additional objects and events from the plugin itself.
         /// </summary>
         /// <param name="disposing">Indicate that the plugin is disposed.</param>
         protected virtual void Dispose(bool disposing)
